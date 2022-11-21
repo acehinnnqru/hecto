@@ -12,26 +12,55 @@ impl Drop for CleanUp {
     }
 }
 
+struct Reader;
+
+impl Reader {
+    fn read_key(&self) -> crossterm::Result<KeyEvent> {
+        loop {
+            if event::poll(Duration::from_millis(500))? {
+                if let Event::Key(event) = event::read()? {
+                    println!("{:?}\r", event);
+                    return Ok(event);
+                }
+            } else {
+                println!("no input yet\r");
+            }
+        }
+    }
+}
+
+struct Editor {
+    reader: Reader,
+}
+
+impl Editor {
+    fn new() -> Self {
+        Self { reader: Reader }
+    }
+
+    fn keypress_process(&self) -> crossterm::Result<bool> {
+        match self.reader.read_key()? {
+            KeyEvent {
+                code: KeyCode::Char('c'),
+                modifiers: KeyModifiers::CONTROL,
+                kind: KeyEventKind::Press,
+                state: KeyEventState::NONE,
+            } => return Ok(false),
+            _ => {}
+        }
+
+        Ok(true)
+    }
+
+    fn run(&self) -> crossterm::Result<bool> {
+        self.keypress_process()
+    }
+}
+
 fn main() -> crossterm::Result<()> {
     let _clean_up = CleanUp;
     terminal::enable_raw_mode().expect("Could not turn on raw mode.");
-    loop {
-        if event::poll(Duration::from_millis(500)).expect("Poll error.") {
-            if let Event::Key(event) = event::read().expect("Failed to read line") {
-                match event {
-                    KeyEvent {
-                        code: KeyCode::Char('c'),
-                        modifiers: KeyModifiers::CONTROL,
-                        kind: KeyEventKind::Press,
-                        state: KeyEventState::NONE,
-                    } => break,
-                    _ => {}
-                }
-                println!("{:?}\r", event);
-            };
-        } else {
-            println!("Not input yet.\r");
-        }
-    }
+    let editor = Editor::new();
+    while editor.run()? {}
     Ok(())
 }
