@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState},
+    event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers},
     terminal,
 };
 use std::time::Duration;
@@ -22,7 +22,13 @@ fn main() -> crossterm::Result<()> {
                     KeyEvent {
                         kind: KeyEventKind::Press,
                         code: KeyCode::Char('q'),
-                        modifiers: event::KeyModifiers::NONE,
+                        modifiers: KeyModifiers::NONE,
+                        state: KeyEventState::NONE,
+                    } => break,
+                    KeyEvent {
+                        code: KeyCode::Char('c'),
+                        modifiers: KeyModifiers::CONTROL,
+                        kind: KeyEventKind::Press,
                         state: KeyEventState::NONE,
                     } => break,
                     _ => {}
