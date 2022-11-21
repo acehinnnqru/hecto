@@ -1,6 +1,6 @@
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers},
-    terminal::{self, ClearType}, execute,
+    terminal::{self, ClearType}, execute, cursor,
 };
 use std::{time::Duration, io::stdout};
 
@@ -9,6 +9,7 @@ struct CleanUp;
 impl Drop for CleanUp {
     fn drop(&mut self) {
         terminal::disable_raw_mode().expect("Could not turn off raw mode.");
+        Output::clear_screen().expect("Fail to clear screen.")
     }
 }
 
@@ -37,7 +38,8 @@ impl Output {
     }
 
     fn clear_screen() -> crossterm::Result<()> {
-        execute!(stdout(), terminal::Clear(ClearType::All))
+        execute!(stdout(), terminal::Clear(ClearType::All))?;
+        execute!(stdout(), cursor::MoveTo(0, 0))
     }
 
     fn refresh_screen(&self) -> crossterm::Result<()> {
