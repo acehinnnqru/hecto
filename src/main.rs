@@ -20,11 +20,8 @@ impl Reader {
         loop {
             if event::poll(Duration::from_millis(500))? {
                 if let Event::Key(event) = event::read()? {
-                    println!("{:?}\r", event);
                     return Ok(event);
                 }
-            } else {
-                println!("no input yet\r");
             }
         }
     }
@@ -37,13 +34,21 @@ impl Output {
         Self
     }
 
+    fn draw_rows(&self) {
+        for _ in 0..24 {
+            println!("~\r");
+        }
+    }
+
     fn clear_screen() -> crossterm::Result<()> {
         execute!(stdout(), terminal::Clear(ClearType::All))?;
         execute!(stdout(), cursor::MoveTo(0, 0))
     }
 
     fn refresh_screen(&self) -> crossterm::Result<()> {
-        Self::clear_screen()
+        Self::clear_screen()?;
+        self.draw_rows();
+        execute!(stdout(), cursor::MoveTo(0, 0))
     }
 }
 
@@ -79,7 +84,7 @@ impl Editor {
 
 fn main() -> crossterm::Result<()> {
     let _clean_up = CleanUp;
-    terminal::enable_raw_mode().expect("Could not turn on raw mode.");
+    terminal::enable_raw_mode()?;
     let editor = Editor::new();
     while editor.run()? {}
     Ok(())
