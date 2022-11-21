@@ -2,7 +2,7 @@ use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers},
     execute,
-    terminal::{self, ClearType},
+    terminal::{self, ClearType}, queue,
 };
 use std::{
     io::{self, stdout, Write},
@@ -34,6 +34,7 @@ impl Reader {
 
 struct Output {
     window: (usize, usize),
+    editor_contents: EditorContents,
 }
 
 impl Output {
@@ -41,14 +42,17 @@ impl Output {
         let window = terminal::size()
             .map(|(x, y)| (x as usize, y as usize))
             .unwrap();
-        Self { window }
+        Self {
+            window,
+            editor_contents: EditorContents::new(),
+        }
     }
 
-    fn draw_rows(&self) {
+    fn draw_rows(&mut self) {
         for _ in 0..self.window.1 - 1 {
-            println!("~\r");
+            self.editor_contents.push_str("~\r\n");
         }
-        print!("~");
+        self.editor_contents.push('~');
         stdout().flush().unwrap();
     }
 
@@ -57,10 +61,11 @@ impl Output {
         execute!(stdout(), cursor::MoveTo(0, 0))
     }
 
-    fn refresh_screen(&self) -> crossterm::Result<()> {
-        Self::clear_screen()?;
+    fn refresh_screen(&mut self) -> crossterm::Result<()> {
+        queue!(self.editor_contents, terminal::Clear(ClearType::All), cursor::MoveTo(0,0))?;
         self.draw_rows();
-        execute!(stdout(), cursor::MoveTo(0, 0))
+        queue!(self.editor_contents, cursor::MoveTo(0,0))?;
+        self.editor_contents.flush()
     }
 }
 
@@ -91,7 +96,7 @@ impl Editor {
         Ok(true)
     }
 
-    fn run(&self) -> crossterm::Result<bool> {
+    fn run(&mut self) -> crossterm::Result<bool> {
         self.output.refresh_screen()?;
         self.keypress_process()
     }
@@ -139,7 +144,7 @@ impl io::Write for EditorContents {
 fn main() -> crossterm::Result<()> {
     let _clean_up = CleanUp;
     terminal::enable_raw_mode()?;
-    let editor = Editor::new();
+    let mut editor = Editor::new();
     while editor.run()? {}
     Ok(())
 }
