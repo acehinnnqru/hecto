@@ -29,13 +29,4 @@ fn main() {
             println!("{:?}\r", event);
         };
     }
-    let mut buf = [0; 1];
-    while io::stdin().read(&mut buf).expect("Failed to read line.") == 1 && buf[0] != b'q' {
-        let ch = buf[0] as char;
-        if ch.is_control() {
-            println!("{}", ch as u8);
-        } else {
-            println!("{}", ch);
-        }
-    }
 }
