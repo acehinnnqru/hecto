@@ -1,8 +1,13 @@
 use crossterm::{
+    cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers},
-    terminal::{self, ClearType}, execute, cursor,
+    execute,
+    terminal::{self, ClearType},
 };
-use std::{time::Duration, io::{stdout, Write}};
+use std::{
+    io::{stdout, Write},
+    time::Duration,
+};
 
 struct CleanUp;
 
@@ -33,7 +38,9 @@ struct Output {
 
 impl Output {
     fn new() -> Self {
-        let window = terminal::size().map(|(x, y)| (x as usize, y as usize)).unwrap();
+        let window = terminal::size()
+            .map(|(x, y)| (x as usize, y as usize))
+            .unwrap();
         Self { window }
     }
 
@@ -64,7 +71,10 @@ struct Editor {
 
 impl Editor {
     fn new() -> Self {
-        Self { reader: Reader, output: Output::new() }
+        Self {
+            reader: Reader,
+            output: Output::new(),
+        }
     }
 
     fn keypress_process(&self) -> crossterm::Result<bool> {
@@ -84,6 +94,26 @@ impl Editor {
     fn run(&self) -> crossterm::Result<bool> {
         self.output.refresh_screen()?;
         self.keypress_process()
+    }
+}
+
+struct EditorContents {
+    content: String,
+}
+
+impl EditorContents {
+    fn new() -> Self {
+        Self {
+            content: String::new(),
+        }
+    }
+
+    fn push(&mut self, ch: char) {
+        self.content.push(ch)
+    }
+
+    fn push_str(&mut self, string: &str) {
+        self.content.push_str(string)
     }
 }
 
