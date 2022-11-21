@@ -41,7 +41,8 @@ impl Output {
         for _ in 0..self.window.1 - 1 {
             println!("~\r");
         }
-        print!("~\r");
+        print!("~");
+        stdout().flush().unwrap();
     }
 
     fn clear_screen() -> crossterm::Result<()> {
