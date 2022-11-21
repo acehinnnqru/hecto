@@ -27,15 +27,18 @@ impl Reader {
     }
 }
 
-struct Output;
+struct Output {
+    window: (usize, usize),
+}
 
 impl Output {
     fn new() -> Self {
-        Self
+        let window = terminal::size().map(|(x, y)| (x as usize, y as usize)).unwrap();
+        Self { window }
     }
 
     fn draw_rows(&self) {
-        for _ in 0..24 {
+        for _ in 0..self.window.1 {
             println!("~\r");
         }
     }
