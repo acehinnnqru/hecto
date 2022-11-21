@@ -2,10 +2,7 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState},
     terminal,
 };
-use std::{
-    io::{self, Read},
-    time::Duration,
-};
+use std::time::Duration;
 
 struct CleanUp;
 
