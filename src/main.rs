@@ -2,7 +2,7 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers},
     terminal::{self, ClearType}, execute, cursor,
 };
-use std::{time::Duration, io::stdout};
+use std::{time::Duration, io::{stdout, Write}};
 
 struct CleanUp;
 
@@ -38,9 +38,10 @@ impl Output {
     }
 
     fn draw_rows(&self) {
-        for _ in 0..self.window.1 {
+        for _ in 0..self.window.1 - 1 {
             println!("~\r");
         }
+        print!("~\r");
     }
 
     fn clear_screen() -> crossterm::Result<()> {
