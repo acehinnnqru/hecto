@@ -20,12 +20,6 @@ fn main() -> crossterm::Result<()> {
             if let Event::Key(event) = event::read().expect("Failed to read line") {
                 match event {
                     KeyEvent {
-                        kind: KeyEventKind::Press,
-                        code: KeyCode::Char('q'),
-                        modifiers: KeyModifiers::NONE,
-                        state: KeyEventState::NONE,
-                    } => break,
-                    KeyEvent {
                         code: KeyCode::Char('c'),
                         modifiers: KeyModifiers::CONTROL,
                         kind: KeyEventKind::Press,
