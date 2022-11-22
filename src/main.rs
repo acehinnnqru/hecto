@@ -34,13 +34,23 @@ impl Reader {
     }
 }
 
+struct CursorController {
+    x: usize, y: usize,
+}
+
+impl CursorController {
+    fn new() -> CursorController {
+        Self { x: 0, y: 0 }
+    }
+}
+
 struct Output {
     window: (usize, usize),
     editor_contents: EditorContents,
 }
 
 impl Output {
-    fn new() -> Self {
+    fn new() -> Output {
         let window = terminal::size()
             .map(|(x, y)| (x as usize, y as usize))
             .unwrap();
@@ -52,7 +62,7 @@ impl Output {
 
     fn welcome(&self) -> String {
         let columns = self.window.0;
-        let mut welcome = format!("{: ^1$}", format!("Version {}", VERSION), columns-1);
+        let mut welcome = format!("{: ^1$}", format!("Version {}", VERSION), columns - 1);
         if welcome.len() > columns {
             welcome.truncate(columns);
         }
