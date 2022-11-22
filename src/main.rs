@@ -1,7 +1,7 @@
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers},
-    execute, queue,
+    queue,
     terminal::{self, ClearType},
 };
 use std::{
@@ -49,16 +49,18 @@ impl Output {
     }
 
     fn draw_rows(&mut self) {
-        for _ in 0..self.window.1 - 1 {
-            self.editor_contents.push_str("~");
+        let height = self.window.1;
+        for i in 0..height {
+            self.editor_contents.push('~');
             queue!(
                 self.editor_contents,
                 terminal::Clear(ClearType::UntilNewLine)
             )
             .unwrap();
-            self.editor_contents.push_str("\r\n");
+            if i < height - 1 {
+                self.editor_contents.push_str("\r\n");
+            }
         }
-        self.editor_contents.push('~');
         stdout().flush().unwrap();
     }
 
