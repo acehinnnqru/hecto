@@ -1,8 +1,8 @@
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers},
-    execute,
-    terminal::{self, ClearType}, queue,
+    execute, queue,
+    terminal::{self, ClearType},
 };
 use std::{
     io::{self, stdout, Write},
@@ -57,14 +57,22 @@ impl Output {
     }
 
     fn clear_screen() -> crossterm::Result<()> {
-        execute!(stdout(), terminal::Clear(ClearType::All))?;
-        execute!(stdout(), cursor::MoveTo(0, 0))
+        queue!(
+            stdout(),
+            terminal::Clear(ClearType::All),
+            cursor::MoveTo(0, 0)
+        )
     }
 
     fn refresh_screen(&mut self) -> crossterm::Result<()> {
-        queue!(self.editor_contents, terminal::Clear(ClearType::All), cursor::MoveTo(0,0))?;
+        queue!(
+            self.editor_contents,
+            cursor::Hide,
+            terminal::Clear(ClearType::All),
+            cursor::MoveTo(0, 0)
+        )?;
         self.draw_rows();
-        queue!(self.editor_contents, cursor::MoveTo(0,0))?;
+        queue!(self.editor_contents, cursor::MoveTo(0, 0), cursor::Show)?;
         self.editor_contents.flush()
     }
 }
