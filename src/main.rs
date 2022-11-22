@@ -9,6 +9,8 @@ use std::{
     time::Duration,
 };
 
+const VERSION: &str = "0.0.1";
+
 struct CleanUp;
 
 impl Drop for CleanUp {
@@ -48,6 +50,15 @@ impl Output {
         }
     }
 
+    fn welcome(&self) -> String {
+        let columns = self.window.0;
+        let mut welcome = format!("{: ^1$}", format!("Version {}", VERSION), columns-1);
+        if welcome.len() > columns {
+            welcome.truncate(columns);
+        }
+        welcome
+    }
+
     fn draw_rows(&mut self) {
         let height = self.window.1;
         for i in 0..height {
@@ -57,6 +68,9 @@ impl Output {
                 terminal::Clear(ClearType::UntilNewLine)
             )
             .unwrap();
+            if i == height / 3 {
+                self.editor_contents.push_str(self.welcome().as_str());
+            }
             if i < height - 1 {
                 self.editor_contents.push_str("\r\n");
             }
