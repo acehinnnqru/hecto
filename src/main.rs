@@ -50,7 +50,13 @@ impl Output {
 
     fn draw_rows(&mut self) {
         for _ in 0..self.window.1 - 1 {
-            self.editor_contents.push_str("~\r\n");
+            self.editor_contents.push_str("~");
+            queue!(
+                self.editor_contents,
+                terminal::Clear(ClearType::UntilNewLine)
+            )
+            .unwrap();
+            self.editor_contents.push_str("\r\n");
         }
         self.editor_contents.push('~');
         stdout().flush().unwrap();
@@ -65,12 +71,7 @@ impl Output {
     }
 
     fn refresh_screen(&mut self) -> crossterm::Result<()> {
-        queue!(
-            self.editor_contents,
-            cursor::Hide,
-            terminal::Clear(ClearType::All),
-            cursor::MoveTo(0, 0)
-        )?;
+        queue!(self.editor_contents, cursor::Hide, cursor::MoveTo(0, 0))?;
         self.draw_rows();
         queue!(self.editor_contents, cursor::MoveTo(0, 0), cursor::Show)?;
         self.editor_contents.flush()
