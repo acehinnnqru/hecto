@@ -11,6 +11,11 @@ use std::{
 
 const VERSION: &str = "0.0.1";
 
+const KEYCODE_LEFT: KeyCode = KeyCode::Char('h');
+const KEYCODE_DOWN: KeyCode = KeyCode::Char('j');
+const KEYCODE_UP: KeyCode = KeyCode::Char('k');
+const KEYCODE_RIGHT: KeyCode = KeyCode::Char('l');
+
 struct CleanUp;
 
 impl Drop for CleanUp {
@@ -35,18 +40,57 @@ impl Reader {
 }
 
 struct CursorController {
-    x: usize, y: usize,
+    x: usize,
+    y: usize,
+    window: (usize, usize),
+}
+
+enum Direction {
+    Left,
+    Up,
+    Down,
+    Right,
+    Home,
+    End,
 }
 
 impl CursorController {
-    fn new() -> CursorController {
-        Self { x: 0, y: 0 }
+    fn new(window: (usize, usize)) -> CursorController {
+        Self { x: 0, y: 0, window }
+    }
+
+    fn move_cursor(&mut self, direction: Direction) {
+        match direction {
+            Direction::Left => {
+                self.x = self.x.saturating_sub(1);
+            }
+            Direction::Down => {
+                if self.y < self.window.1 {
+                    self.y += 1;
+                };
+            }
+            Direction::Up => {
+                self.y = self.y.saturating_sub(1);
+            }
+            Direction::Right => {
+                if self.x < self.window.0 {
+                    self.x += 1;
+                }
+            }
+            Direction::Home => {
+                self.x = 0;
+            }
+            Direction::End => {
+                self.x = self.window.0;
+            }
+        }
     }
 }
 
 struct Output {
     window: (usize, usize),
     editor_contents: EditorContents,
+    cursor_controller: CursorController,
 }
 
 impl Output {
@@ -57,6 +101,7 @@ impl Output {
         Self {
             window,
             editor_contents: EditorContents::new(),
+            cursor_controller: CursorController::new(window),
         }
     }
 
@@ -88,6 +133,19 @@ impl Output {
         stdout().flush().unwrap();
     }
 
+    fn move_cursor(&mut self, code: KeyCode) {
+        let direction: Direction = match code {
+            KEYCODE_LEFT => Direction::Left,
+            KEYCODE_UP => Direction::Up,
+            KEYCODE_DOWN => Direction::Down,
+            KEYCODE_RIGHT => Direction::Right,
+            KeyCode::Home => Direction::Home,
+            KeyCode::End => Direction::End,
+            _ => unimplemented!(),
+        };
+        self.cursor_controller.move_cursor(direction);
+    }
+
     fn clear_screen() -> crossterm::Result<()> {
         queue!(
             stdout(),
@@ -99,7 +157,13 @@ impl Output {
     fn refresh_screen(&mut self) -> crossterm::Result<()> {
         queue!(self.editor_contents, cursor::Hide, cursor::MoveTo(0, 0))?;
         self.draw_rows();
-        queue!(self.editor_contents, cursor::MoveTo(0, 0), cursor::Show)?;
+        let x = self.cursor_controller.x;
+        let y = self.cursor_controller.y;
+        queue!(
+            self.editor_contents,
+            cursor::MoveTo(x as u16, y as u16),
+            cursor::Show
+        )?;
         self.editor_contents.flush()
     }
 }
@@ -117,7 +181,7 @@ impl Editor {
         }
     }
 
-    fn keypress_process(&self) -> crossterm::Result<bool> {
+    fn keypress_process(&mut self) -> crossterm::Result<bool> {
         match self.reader.read_key()? {
             KeyEvent {
                 code: KeyCode::Char('c'),
@@ -125,6 +189,18 @@ impl Editor {
                 kind: KeyEventKind::Press,
                 state: KeyEventState::NONE,
             } => return Ok(false),
+            KeyEvent {
+                code:
+                    val @ (KEYCODE_LEFT
+                    | KEYCODE_RIGHT
+                    | KEYCODE_DOWN
+                    | KEYCODE_UP
+                    | KeyCode::Home
+                    | KeyCode::End),
+                modifiers: KeyModifiers::NONE,
+                kind: KeyEventKind::Press,
+                state: KeyEventState::NONE,
+            } => self.output.move_cursor(val),
             _ => {}
         }
 
